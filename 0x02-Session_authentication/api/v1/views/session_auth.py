@@ -3,7 +3,7 @@
     that handles all routes for the Session authentication.
 """
 from api.v1.views import app_views
-from flask import jsonify, request, make_response
+from flask import abort, jsonify, request, make_response
 from models.user import User
 import os
 
@@ -32,9 +32,26 @@ def login() -> str:
             # not on top of the file (can generate circular import -
             #  and break first tasks of this project)
             from api.v1.app import auth
+
             session_id = auth.create_session(user.id)
             response = make_response(user.to_json())
             response.set_cookie(os.getenv('SESSION_NAME'), session_id)
             return response
 
     return jsonify({"error": "wrong password"}), 401
+
+
+@app_views.route(
+    '/auth_session/logout',
+    methods=['DELETE'],
+    strict_slashes=False
+)
+def logout():
+    """ Session authentication handler
+    """
+    from api.v1.app import auth
+
+    if auth.destroy_session(request) is False:
+        abort(404)
+
+    return jsonify({}), 200
