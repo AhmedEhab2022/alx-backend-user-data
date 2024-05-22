@@ -3,6 +3,7 @@
 """
 from .session_exp_auth import SessionExpAuth
 from models.user_session import UserSession
+from datetime import datetime, timedelta
 
 
 class SessionDBAuth(SessionExpAuth):
@@ -29,6 +30,17 @@ class SessionDBAuth(SessionExpAuth):
 
         users = UserSession.search({'session_id': session_id})
         if users == []:
+            return None
+
+        if self.session_duration <= 0:
+            return users[0].user_id
+
+        if not hasattr(users[0], 'created_at'):
+            return None
+
+        created_at = users[0].created_at
+        sum = created_at + timedelta(seconds=self.session_duration)
+        if sum < datetime.now():
             return None
 
         return users[0].user_id
