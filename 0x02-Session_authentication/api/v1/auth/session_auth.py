@@ -3,6 +3,8 @@
 """
 from .auth import Auth
 import uuid
+from typing import TypeVar
+from models.user import User
 
 
 class SessionAuth(Auth):
@@ -31,3 +33,13 @@ class SessionAuth(Auth):
             return None
 
         return self.user_id_by_session_id.get(session_id)
+
+    def current_user(self, request=None) -> TypeVar('User'):
+        """ returns a User instance based on a cookie value:
+                it uses self.session_cookie(...) and
+                    self.user_id_for_session_id(...) to
+                    return the User ID based on the cookie _my_session_id
+        """
+        session_id = self.session_cookie(request)
+        user_id = self.user_id_for_session_id(session_id)
+        return User.get(user_id)
